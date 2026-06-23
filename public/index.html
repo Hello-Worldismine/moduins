@@ -98,14 +98,15 @@
       appearance: none;
     }
 
-    .date-input-wrap {
-      overflow: hidden;
-      border-radius: 10px;
+    .birthdate-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
     }
 
-    input[type="date"] {
-      min-height: 52px;
-      display: block;
+    .birthdate-row select {
+      flex: 1;
+      min-width: 0;
     }
 
     input:focus, select:focus {
@@ -219,8 +220,10 @@
 
         <div class="form-group">
           <label>생년월일 <span class="required">*</span></label>
-          <div class="date-input-wrap">
-            <input type="date" id="birthdate" max="">
+          <div class="birthdate-row">
+            <select id="birthYear"><option value="">년도</option></select>
+            <select id="birthMonth"><option value="">월</option></select>
+            <select id="birthDay"><option value="">일</option></select>
           </div>
         </div>
 
@@ -283,8 +286,23 @@
       }
     });
 
-    // 생년월일 최대 오늘
-    document.getElementById('birthdate').max = new Date().toISOString().split('T')[0];
+    // 생년월일 드롭다운 채우기
+    (function () {
+      const now = new Date();
+      const yearSel = document.getElementById('birthYear');
+      const monthSel = document.getElementById('birthMonth');
+      const daySel = document.getElementById('birthDay');
+
+      for (let y = now.getFullYear(); y >= 1930; y--) {
+        yearSel.innerHTML += `<option value="${y}">${y}년</option>`;
+      }
+      for (let m = 1; m <= 12; m++) {
+        monthSel.innerHTML += `<option value="${String(m).padStart(2,'0')}">${m}월</option>`;
+      }
+      for (let d = 1; d <= 31; d++) {
+        daySel.innerHTML += `<option value="${String(d).padStart(2,'0')}">${d}일</option>`;
+      }
+    })();
 
     document.getElementById('consultForm').addEventListener('submit', async function (e) {
       e.preventDefault();
@@ -294,12 +312,15 @@
 
       const name = document.getElementById('name').value.trim();
       const phone = document.getElementById('phone').value.trim();
-      const birthdate = document.getElementById('birthdate').value;
+      const y = document.getElementById('birthYear').value;
+      const m = document.getElementById('birthMonth').value;
+      const d = document.getElementById('birthDay').value;
+      const birthdate = (y && m && d) ? `${y}-${m}-${d}` : '';
       const region = document.getElementById('region').value;
 
       if (!name) return showError('이름을 입력해주세요.');
       if (!phone) return showError('전화번호를 입력해주세요.');
-      if (!birthdate) return showError('생년월일을 입력해주세요.');
+      if (!birthdate) return showError('생년월일을 선택해주세요.');
       if (!region) return showError('거주지역을 선택해주세요.');
 
       btn.disabled = true;
