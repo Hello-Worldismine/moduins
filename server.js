@@ -16,6 +16,10 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 function readSubmissions() {
+  const dir = path.dirname(DATA_FILE);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
   if (!fs.existsSync(DATA_FILE)) {
     fs.writeFileSync(DATA_FILE, JSON.stringify([]), FILE_ENCODING);
   }
