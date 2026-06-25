@@ -309,8 +309,12 @@
       <div class="table-card">
         <div class="table-header">
           <h2>신청자 목록</h2>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
             <input class="search-input" type="text" id="searchInput" placeholder="이름 또는 전화번호 검색" oninput="filterTable()">
+            <input class="search-input" type="date" id="dateFrom" style="width:140px;" oninput="filterTable()">
+            <span style="font-size:13px;color:#6b7280;">~</span>
+            <input class="search-input" type="date" id="dateTo" style="width:140px;" oninput="filterTable()">
+            <button class="btn btn-secondary" onclick="clearDateFilter()">초기화</button>
             <button class="btn btn-primary" onclick="downloadExcel()">엑셀 다운로드</button>
           </div>
         </div>
@@ -397,11 +401,23 @@
 
     function filterTable() {
       const q = document.getElementById('searchInput').value.toLowerCase().replace(/-/g, '');
-      const filtered = allData.filter(d =>
-        d.name.toLowerCase().includes(q) ||
-        d.phone.replace(/-/g, '').includes(q)
-      );
+      const from = document.getElementById('dateFrom').value;
+      const to = document.getElementById('dateTo').value;
+
+      const filtered = allData.filter(d => {
+        const dateStr = d.createdAt.slice(0, 10);
+        if (q && !d.name.toLowerCase().includes(q) && !d.phone.replace(/-/g, '').includes(q)) return false;
+        if (from && dateStr < from) return false;
+        if (to && dateStr > to) return false;
+        return true;
+      });
       renderTable(filtered);
+    }
+
+    function clearDateFilter() {
+      document.getElementById('dateFrom').value = '';
+      document.getElementById('dateTo').value = '';
+      filterTable();
     }
 
     function downloadExcel() {
