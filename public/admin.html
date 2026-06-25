@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>관리자 페이지 | 모두의 보험금 찾기</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -308,7 +309,10 @@
       <div class="table-card">
         <div class="table-header">
           <h2>신청자 목록</h2>
-          <input class="search-input" type="text" id="searchInput" placeholder="이름 또는 전화번호 검색" oninput="filterTable()">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <input class="search-input" type="text" id="searchInput" placeholder="이름 또는 전화번호 검색" oninput="filterTable()">
+            <button class="btn btn-primary" onclick="downloadExcel()">엑셀 다운로드</button>
+          </div>
         </div>
         <div class="table-wrap">
           <table>
@@ -392,11 +396,32 @@
     }
 
     function filterTable() {
-      const q = document.getElementById('searchInput').value.toLowerCase();
+      const q = document.getElementById('searchInput').value.toLowerCase().replace(/-/g, '');
       const filtered = allData.filter(d =>
-        d.name.toLowerCase().includes(q) || d.phone.includes(q)
+        d.name.toLowerCase().includes(q) ||
+        d.phone.replace(/-/g, '').includes(q)
       );
       renderTable(filtered);
+    }
+
+    function downloadExcel() {
+      if (allData.length === 0) { alert('다운로드할 데이터가 없습니다.'); return; }
+      const rows = allData.map((d, i) => ({
+        '번호': allData.length - i,
+        '이름': d.name,
+        '전화번호': d.phone,
+        '생년월일': formatBirth(d.birthdate),
+        '거주지역': d.region,
+        '신청일시': formatDate(d.createdAt)
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = [
+        { wch: 6 }, { wch: 10 }, { wch: 16 }, { wch: 14 }, { wch: 8 }, { wch: 20 }
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '신청자목록');
+      const today = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
+      XLSX.writeFile(wb, `상담신청_${today}.xlsx`);
     }
 
     function renderTable(data) {
